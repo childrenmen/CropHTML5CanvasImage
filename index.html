@@ -1,0 +1,137 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <title>HTML5 + drag and drop + FileApi + Jcop</title>
+    <meta http-equiv="Content-type" content="text/html;charset=UTF-8"/>
+
+    <script src="js/jquery.min.js"></script>
+    <script src="js/jquery.Jcrop.js"></script>
+    <script type="text/javascript">
+        var ACCEPTED_TYPES = {
+            'image/png': true,
+            'image/jpeg': true,
+            'image/gif': true
+        };
+        // рендеринг изображения
+        function renderImage(file) {
+            if (ACCEPTED_TYPES[file.type] === true) {
+                var $pimg = $('form img'),
+                    $preview = $('#preview-pane');
+                // генерация нового объекта FileReader
+                var reader = new FileReader();
+                // подстановка изображения в атрибут src
+                reader.onload = function (event) {
+
+                    var the_url = event.target.result;
+                    $pimg.attr("src", the_url);
+                    var     xsize = 200,
+                            ysize = 200,
+                            $canvas = $('canvas')[0],
+                            ctx = $canvas.getContext("2d");
+
+                    $('#target').Jcrop({
+                        onChange: updatePreview,
+                        onSelect: updatePreview,
+                        aspectRatio: xsize / ysize
+                    }, function () {
+                             $preview.appendTo(this.ui.holder);
+                    });
+
+                    function updatePreview(c) {
+                        if (parseInt(c.w) > 0) {
+                            var kWidth = $pimg[0].naturalWidth / 300,
+                                    kHeight = $pimg[0].naturalHeight / 300;
+                            ctx.drawImage($pimg[0], c.x * kWidth, c.y * kHeight, c.w * kWidth, c.h * kHeight, 0, 0, 200, 200);
+
+                        }
+                    };
+
+                };
+                reader.readAsDataURL(file);
+            }
+            else
+                alert('Ошибка загрузки ' + file.name + ' ' + (file.size ? (file.size / 1024 | 0) + 'K' : ''));
+        }
+
+
+    </script>
+    <link rel="stylesheet" href="css/jquery.Jcrop.css" type="text/css"/>
+    <style type="text/css">
+
+
+        .jcrop-holder #preview-pane {
+            display: block;
+            position: absolute;
+            z-index: 2000;
+            top: 10px;
+            right: -280px;
+            padding: 6px;
+
+        }
+
+        #holder {
+            border: 2px dashed #ccc;
+            width: 300px;
+            min-height: 300px;
+
+        }
+
+        #holder.hover {
+            border: 2px solid #0c0;
+        }
+
+        #holder p {
+            margin: 10px;
+            font-size: 14px;
+        }
+
+        .btn {
+            border: 2px solid #1e88e5;
+            background-color: #1e88e5;
+        }
+
+    </style>
+
+</head>
+<body>
+<form>
+    <input style="display: none" type="file" name="upload" id="uploadbtn">
+    <label for="uploadbtn" class="btn"> Загрузить файл </label>
+    <div id="holder">
+        <img id="target" style=" width:300px; height:300px;"/>
+    </div>
+
+    <div id="preview-pane">
+        <div class="preview-container">
+            <canvas id="canvasSource" width="200" height="200"></canvas>
+
+        </div>
+    </div>
+</form>
+<script>
+    $("#uploadbtn").change(function () {
+         renderImage(this.files[0])
+    });
+    var holder = document.getElementById('holder');
+
+
+    holder.ondragover = function () {
+        this.className = 'hover';
+        return false;
+    };
+    holder.ondragend = function () {
+        this.className = '';
+        return false;
+    };
+    holder.ondrop = function (e) {
+        this.className = '';
+        e.preventDefault();
+        renderImage(e.dataTransfer.files[0])
+
+    }
+
+</script>
+
+</body>
+</html>
+
